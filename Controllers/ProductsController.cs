@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using DeepInventoryManagmentAPICoreRepoPattern.Models;
+﻿using DeepInventoryManagmentAPICoreRepoPattern.Models;
 using DeepInventoryManagmentAPICoreRepoPattern.Repository;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
 {
@@ -56,23 +52,7 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(products).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!ProductsExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _productRepository.Update(products);
 
             return NoContent();
         }
@@ -83,7 +63,6 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
         public async Task<ActionResult<Products>> PostProducts(Products products)
         {
             await _productRepository.Insert(products);
-            await _productRepository.Save();
 
             return CreatedAtAction("GetProducts", new { id = products.Id }, products);
         }
@@ -99,7 +78,6 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
             }
 
             await _productRepository.Delete(id);
-            await _productRepository.Save();
 
             return NoContent();
         }

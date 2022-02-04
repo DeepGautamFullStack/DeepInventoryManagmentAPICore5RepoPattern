@@ -1,0 +1,1 @@
+# DeepInventoryManagmentAPICore5RepoPattern

@@ -1,8 +1,6 @@
 ﻿using DeepInventoryManagmentAPICoreRepoPattern.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace DeepInventoryManagmentAPICoreRepoPattern.Repository
@@ -24,9 +22,19 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Repository
 
         public async Task<Customer> Insert(Customer entity)
         {
-            await _context.Customer.AddAsync(entity);
-            return entity;
+            var result = await _context.Customer.AddAsync(entity);
+            await _context.SaveChangesAsync();
+
+            return result.Entity; ;
         }
+
+        public async Task<Customer> Update(Customer entity)
+        {
+            _context.Entry(entity).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return null;
+        }
+
         public async Task Delete(int Id)
         {
             var prod = await _context.Customer.FirstOrDefaultAsync(p => p.Id == Id);
@@ -35,10 +43,6 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Repository
                 _context.Remove(prod);
             }
         }
-        public async Task Save()
-        {
-            await _context.SaveChangesAsync();
-
-        }
+       
     }
 }

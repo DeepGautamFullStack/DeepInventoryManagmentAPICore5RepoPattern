@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using DeepInventoryManagmentAPICoreRepoPattern.Models;
+using DeepInventoryManagmentAPICoreRepoPattern.Repository;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using DeepInventoryManagmentAPICoreRepoPattern.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
 {
@@ -13,25 +10,28 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        private readonly RepoPatternContext _context;
 
-        public CustomersController(RepoPatternContext context)
+        private readonly IRepository<Customer, int> _customerRepository;
+
+        public CustomersController(IRepository<Customer, int> customerRepository)
         {
-            _context = context;
+            _customerRepository = customerRepository;
         }
+
 
         // GET: api/Customers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomer()
+        public async Task<IEnumerable<Customer>> GetCustomer()
         {
-            return await _context.Customer.ToListAsync();
+            var cust = _customerRepository.GetAll();
+            return await cust;
         }
 
         // GET: api/Customers/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Customer>> GetCustomer(int id)
         {
-            var customer = await _context.Customer.FindAsync(id);
+            var customer = await _customerRepository.GetById(id);
 
             if (customer == null)
             {
@@ -51,23 +51,7 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(customer).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CustomerExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _customerRepository.Update(customer);
 
             return NoContent();
         }
@@ -77,8 +61,7 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
         [HttpPost]
         public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
         {
-            _context.Customer.Add(customer);
-            await _context.SaveChangesAsync();
+            await _customerRepository.Insert(customer);
 
             return CreatedAtAction("GetCustomer", new { id = customer.Id }, customer);
         }
@@ -87,21 +70,28 @@ namespace DeepInventoryManagmentAPICoreRepoPattern.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
-            var customer = await _context.Customer.FindAsync(id);
-            if (customer == null)
+            var products = await _customerRepository.GetById(id);
+            if (products == null)
             {
                 return NotFound();
             }
 
-            _context.Customer.Remove(customer);
-            await _context.SaveChangesAsync();
+            await _customerRepository.Delete(id);
 
             return NoContent();
         }
 
         private bool CustomerExists(int id)
         {
-            return _context.Customer.Any(e => e.Id == id);
+            var cust = _customerRepository.GetById(id);
+            if (cust != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
